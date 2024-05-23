@@ -1,9 +1,12 @@
 import json
+import logging
 from datetime import datetime
 
 import requests
 from config import get_config
 from pydantic import AliasPath, BaseModel, Field, HttpUrl, field_validator
+
+log = logging.getLogger(__name__)
 
 
 class GuardianContent(BaseModel):
@@ -34,6 +37,13 @@ class GuardianAPIError(Exception):
 
 
 class GuardianAPI:
+    """
+    Wrapper class for interacting with Guardian API.
+
+    Attributes:
+    api_key (str): API access key.
+    """
+
     API_URL = "https://content.guardianapis.com"
 
     def __init__(self, api_key: str):
@@ -59,12 +69,14 @@ class GuardianAPI:
         A serialized JSON string of 10 parsed articles.
         """
         if not search_term:
+            log.error("Search term parameter required.")
             raise ValueError("Search term parameter required.")
 
         if from_date:
             try:
                 datetime.strptime(from_date, "%Y-%m-%d")
             except ValueError:
+                log.error("The from_date must be in the format YYYY-MM-DD.")
                 raise ValueError("The from_date must be in the format YYYY-MM-DD.")
 
         req_params = {
@@ -86,6 +98,7 @@ class GuardianAPI:
             )
             response.raise_for_status()
         except requests.RequestException as e:
+            log.error("Guardian API error.")
             raise GuardianAPIError(f"Error fetching Guardian articles: {e}")
 
         data = response.json()

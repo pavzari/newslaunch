@@ -1,4 +1,3 @@
-import json
 import logging
 import uuid
 
@@ -53,8 +52,7 @@ class AWSKinesisStream:
                 PartitionKey=partition_key,
             )
             log.info("Put data to stream %s.", self.stream_name)
+            return response
         except ClientError:
             log.exception("Error sending record to stream %s.", self.stream_name)
             raise
-        else:
-            return response
