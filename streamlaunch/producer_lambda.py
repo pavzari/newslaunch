@@ -18,6 +18,7 @@ def lambda_handler(event: dict, context) -> dict:
             body = json.loads(event["body"])
             search_term = body.get("search_term")
             from_date = body.get("from_date")
+            stream_name = event.get("stream_name")
         except json.JSONDecodeError:
             log.error("Failed to decode event JSON body.")
             return {
@@ -29,7 +30,7 @@ def lambda_handler(event: dict, context) -> dict:
     else:
         search_term = event.get("search_term")
         from_date = event.get("from_date")
-        stream_name = event.get("guardian_content")  # not sure about this..
+        stream_name = event.get("stream_name")  # not sure about this..
 
     try:
         guardian_api = GuardianAPI(get_config().GUARDIAN_API_KEY)
