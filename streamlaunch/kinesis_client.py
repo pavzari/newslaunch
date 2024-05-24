@@ -1,6 +1,6 @@
 import logging
 import uuid
-
+import json
 import boto3
 from botocore.exceptions import ClientError
 from config import get_config
@@ -47,8 +47,7 @@ class AWSKinesisStream:
             client = self._get_client()
             response = client.put_record(
                 StreamName=self.stream_name,
-                # Data=json.dumps(data),
-                Data=data,  # API wrapper returns a serialized JSON string, for now...
+                Data=json.dumps(data),
                 PartitionKey=partition_key,
             )
             log.info("Put data to stream %s.", self.stream_name)

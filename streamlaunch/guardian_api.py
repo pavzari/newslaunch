@@ -4,7 +4,7 @@ from datetime import datetime
 
 import requests
 from config import get_config
-from pydantic import AliasPath, BaseModel, Field, HttpUrl, field_validator
+from pydantic import AliasPath, BaseModel, Field, field_validator
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class GuardianContent(BaseModel):
 
     web_publication_date: str = Field(..., alias="webPublicationDate")
     web_title: str = Field(..., alias="webTitle")
-    web_url: HttpUrl = Field(..., alias="webUrl")
+    web_url: str = Field(..., alias="webUrl")
     content_preview: str = Field(
         ...,
         validation_alias=AliasPath("fields", "bodyText"),
@@ -55,7 +55,7 @@ class GuardianAPI:
         from_date: str | None = None,
         response_format: str = "json",
         page: int = 1,
-    ) -> str:
+    ) -> list[dict]:
         """
         Search for Guardian articles.
 
@@ -104,10 +104,10 @@ class GuardianAPI:
         data = response.json()
         results = data.get("response", {}).get("results", [])
         parsed_results = [
-            article.model_dump_json(by_alias=True)
+            article.model_dump(by_alias=True)
             for article in self._parse_articles(results)
         ]
-        return json.dumps(parsed_results)
+        return parsed_results
 
     def _parse_articles(self, articles: list[dict]) -> list[GuardianContent]:
         """
