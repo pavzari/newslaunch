@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 
@@ -7,6 +6,7 @@ from config import get_config
 from pydantic import AliasPath, BaseModel, Field, field_validator
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class GuardianContent(BaseModel):

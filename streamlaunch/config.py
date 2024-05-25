@@ -22,7 +22,7 @@ def get_config() -> Config:
         GUARDIAN_API_KEY=os.environ["GUARDIAN_API_KEY"],
         AWS_ACCESS_KEY_ID=os.environ["AWS_ACCESS_KEY_ID"],
         AWS_SECRET_ACCESS_KEY=os.environ["AWS_SECRET_ACCESS_KEY"],
-        KINESIS_REGION_NAME=os.environ["KINESIS_REGION_NAME"],
+        KINESIS_REGION_NAME=os.environ.get("KINESIS_REGION_NAME", "eu-west-2"),
         LOG_LEVEL=os.environ.get("LOG_LEVEL", "INFO"),
         HTTP_REQ_TIMEOUT=int(os.environ.get("HTTP_REQ_TIMEOUT", 10)),
     )

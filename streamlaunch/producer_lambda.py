@@ -6,8 +6,8 @@ from config import get_config
 from guardian_api import GuardianAPI, GuardianAPIError
 from kinesis_client import AWSKinesisStream
 
-logging.basicConfig(level=get_config().LOG_LEVEL)
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 def lambda_handler(event: dict, context) -> dict:

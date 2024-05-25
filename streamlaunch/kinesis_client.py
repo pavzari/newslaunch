@@ -1,12 +1,15 @@
+import json
 import logging
 import uuid
-import json
+
 import boto3
 from botocore.exceptions import ClientError
 from config import get_config
 
 config = get_config()
+
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class AWSKinesisStream:
