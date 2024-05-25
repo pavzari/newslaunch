@@ -55,7 +55,7 @@ class GuardianAPI:
         from_date: str | None = None,
         response_format: str = "json",
         page: int = 1,
-    ) -> list[dict]:
+    ) -> list[dict] | None:
         """
         Search for Guardian articles.
 
@@ -66,7 +66,8 @@ class GuardianAPI:
         page (int, optional): The page number of the search results to retrieve. Defaults to 1.
 
         Returns:
-        A serialized JSON string of 10 parsed articles.
+        list[dict] of 10 parsed articles.
+        None if search yields no results.
         """
         if not search_term:
             log.error("Search term parameter required.")
@@ -102,7 +103,12 @@ class GuardianAPI:
             raise GuardianAPIError(f"Error fetching Guardian articles: {e}")
 
         data = response.json()
-        results = data.get("response", {}).get("results", [])
+        results = data.get("response", {}).get("results")
+        if not results:
+            log.info(
+                f"No results for search term '{search_term}' with date_from '{from_date}'"
+            )
+            return None
         parsed_results = [
             article.model_dump(by_alias=True)
             for article in self._parse_articles(results)

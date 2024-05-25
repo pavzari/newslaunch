@@ -37,19 +37,22 @@ def lambda_handler(event: dict, context) -> dict:
         kinesis = AWSKinesisStream(stream_name)
 
         search_results = guardian_api.get_articles(search_term, from_date)
-        response = kinesis.send_to_stream(search_results)
+        if search_results is None:
+            return {
+                "statusCode": 204,
+                "body": json.dumps({"message": "No data to process."}),
+            }
 
+        kinesis.send_to_stream(search_results)
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Data processed and published to stream."}),
         }
-
     except ValueError as e:
         return {
             "statusCode": 400,
             "body": json.dumps({"error": f"Invalid input parameter: {e}"}),
         }
-
     except (GuardianAPIError, ClientError) as e:
         return {
             "statusCode": 500,

@@ -56,5 +56,5 @@ class AWSKinesisStream:
             log.info("Put data to stream %s.", self.stream_name)
             return response
         except ClientError:
-            log.exception("Error sending record to stream %s.", self.stream_name)
+            log.error("Error sending record to stream %s.", self.stream_name)
             raise
