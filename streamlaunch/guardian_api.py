@@ -54,6 +54,7 @@ class GuardianAPI:
         search_term: str,
         from_date: str | None = None,
         response_format: str = "json",
+        filter_response: bool = True,
         page: int = 1,
     ) -> list[dict] | None:
         """
@@ -63,6 +64,7 @@ class GuardianAPI:
         search_term (str): The search query for articles.
         from_date (str | None, optional): The earliest publication date in the search results (YYYY-MM-DD format). Defaults to None.
         response_format (str, optional): The format of the API response. Defaults to 'json'.
+        filter_response (bool): Returns full API response if False. If True, only selected fields are extracted.
         page (int, optional): The page number of the search results to retrieve. Defaults to 1.
 
         Returns:
@@ -104,18 +106,23 @@ class GuardianAPI:
 
         data = response.json()
         results = data.get("response", {}).get("results")
+
         if not results:
             log.info(
                 f"No results for search term '{search_term}' with date_from '{from_date}'"
             )
             return None
-        parsed_results = [
-            article.model_dump(by_alias=True)
-            for article in self._parse_articles(results)
-        ]
-        return parsed_results
 
-    def _parse_articles(self, articles: list[dict]) -> list[GuardianContent]:
+        if filter_response:
+            filtered_results = [
+                article.model_dump(by_alias=True)
+                for article in self._filter_articles(results)
+            ]
+            return filtered_results
+        else:
+            return results
+
+    def _filter_articles(self, articles: list[dict]) -> list[GuardianContent]:
         """
         Parse the API response and extract required fields.
 
@@ -125,13 +132,17 @@ class GuardianAPI:
         Returns:
         A list of GuardianContent models representing parsed search results.
         """
-        parsed_articles = []
+        filtered_articles = []
         for article in articles:
-            parsed_articles.append(GuardianContent(**article))
-        return parsed_articles
+            filtered_articles.append(GuardianContent(**article))
+        return filtered_articles
 
 
 if __name__ == "__main__":
+    import json
+
     guardian_api = GuardianAPI(get_config().GUARDIAN_API_KEY)
-    articles = guardian_api.get_articles("machine learning", "2023-01-01")
-    print(articles)
+    articles = guardian_api.get_articles(
+        "machine learning", "2023-01-01", filter_response=False
+    )
+    print(json.dumps(articles))
