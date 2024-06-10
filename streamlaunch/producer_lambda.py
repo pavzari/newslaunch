@@ -40,7 +40,11 @@ def lambda_handler(event: dict, context) -> dict:
         if search_results is None:
             return {
                 "statusCode": 204,
-                "body": json.dumps({"message": "No data to process."}),
+                "body": json.dumps(
+                    {
+                        "message": f"No results for '{search_term}' with date_from '{from_date}'"
+                    }
+                ),
             }
 
         kinesis.send_to_stream(search_results)

@@ -1,12 +1,8 @@
-import logging
 from datetime import datetime
 
 import requests
 from config import get_config
 from pydantic import AliasPath, BaseModel, Field, field_validator
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class GuardianContent(BaseModel):
@@ -24,6 +20,7 @@ class GuardianContent(BaseModel):
     @field_validator("content_preview")
     @classmethod
     def truncate_article_content(cls, content: str) -> str:
+        """Truncate the article content to 1000 characters."""
         if len(content) > 1000:
             return content[:1000]
         else:
@@ -47,6 +44,9 @@ class GuardianAPI:
     API_URL = "https://content.guardianapis.com"
 
     def __init__(self, api_key: str):
+        if not api_key:
+            raise ValueError("API key is required.")
+
         self.api_key = api_key
 
     def get_articles(
@@ -62,24 +62,26 @@ class GuardianAPI:
 
         Parameters:
         search_term (str): The search query for articles.
-        from_date (str | None, optional): The earliest publication date in the search results (YYYY-MM-DD format). Defaults to None.
+        from_date (str | None, optional): The earliest publication date (YYYY-MM-DD format). Defaults to None.
         response_format (str, optional): The format of the API response. Defaults to 'json'.
-        filter_response (bool): Returns full API response if False. If True, only selected fields are extracted.
+        filter_response (bool): Returns a filtered response if True, else returns the full response. Defaults to True.
         page (int, optional): The page number of the search results to retrieve. Defaults to 1.
 
         Returns:
-        list[dict] of 10 parsed articles.
-        None if search yields no results.
+        list[dict] | None: A list of parsed articles if found, None otherwise.
+
+        Raises:
+        ValueError: If search_term is empty or None.
+        ValueError: If from_date is provided but not in 'YYYY-MM-DD' format.
+        GuardianAPIError: If an error occurs while fetching articles from the Guardian API.
         """
         if not search_term:
-            log.error("Search term parameter required.")
             raise ValueError("Search term parameter required.")
 
         if from_date:
             try:
                 datetime.strptime(from_date, "%Y-%m-%d")
             except ValueError:
-                log.error("The from_date must be in the format YYYY-MM-DD.")
                 raise ValueError("The from_date must be in the format YYYY-MM-DD.")
 
         req_params = {
@@ -101,16 +103,12 @@ class GuardianAPI:
             )
             response.raise_for_status()
         except requests.RequestException as e:
-            log.error("Guardian API error.")
             raise GuardianAPIError(f"Error fetching Guardian articles: {e}")
 
         data = response.json()
         results = data.get("response", {}).get("results")
 
         if not results:
-            log.info(
-                f"No results for search term '{search_term}' with date_from '{from_date}'"
-            )
             return None
 
         if filter_response:
@@ -130,7 +128,7 @@ class GuardianAPI:
         articles (list[dict]): List of articles from the API response.
 
         Returns:
-        A list of GuardianContent models representing parsed search results.
+        Alist[GuardianContent]: list of GuardianContent models representing parsed search results.
         """
         filtered_articles = []
         for article in articles:

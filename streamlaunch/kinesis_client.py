@@ -1,15 +1,11 @@
 import json
-import logging
 import uuid
+from typing import Any
 
 import boto3
-from botocore.exceptions import ClientError
 from config import get_config
 
 config = get_config()
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class AWSKinesisStream:
@@ -21,6 +17,9 @@ class AWSKinesisStream:
     """
 
     def __init__(self, stream_name: str):
+        if not stream_name:
+            raise ValueError("Stream_name parameter is required.")
+
         self.stream_name = stream_name
 
     def _get_client(self):
@@ -32,7 +31,7 @@ class AWSKinesisStream:
             aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
         )
 
-    def send_to_stream(self, data: str, partition_key: str | None = None) -> dict:
+    def send_to_stream(self, data: Any, partition_key: str | None = None) -> dict:
         """
         Send data to Kinesis stream.
 
@@ -46,15 +45,10 @@ class AWSKinesisStream:
         if partition_key is None:
             partition_key = str(uuid.uuid4())
 
-        try:
-            client = self._get_client()
-            response = client.put_record(
-                StreamName=self.stream_name,
-                Data=json.dumps(data),
-                PartitionKey=partition_key,
-            )
-            log.info("Put data to stream %s.", self.stream_name)
-            return response
-        except ClientError:
-            log.error("Error sending record to stream %s.", self.stream_name)
-            raise
+        client = self._get_client()
+        response = client.put_record(
+            StreamName=self.stream_name,
+            Data=json.dumps(data),
+            PartitionKey=partition_key,
+        )
+        return response
