@@ -1,5 +1,5 @@
-from datetime import datetime
 import os
+from datetime import datetime
 
 import requests
 from pydantic import AliasPath, BaseModel, Field, field_validator
@@ -57,20 +57,21 @@ class GuardianAPI:
     def search_articles(
         self,
         search_term: str,
+        page_size: int = 10,
         from_date: str | None = None,
-        response_format: str = "json",
         filter_response: bool = True,
-        page: int = 1,
+        order_by: str | None = None,
     ) -> list[dict] | None:
         """
         Search for Guardian articles.
 
         Parameters:
         search_term (str): The search query for articles.
+        page_size (int, optional): The number of items displayed per page (up to 200). Defaults to 10.
         from_date (str | None, optional): The earliest publication date (YYYY-MM-DD format). Defaults to None.
-        response_format (str, optional): The format of the API response. Defaults to 'json'.
         filter_response (bool): Returns a filtered response if True, else returns the full response. Defaults to True.
-        page (int, optional): The page number of the search results to retrieve. Defaults to 1.
+        order_by (str | None, optional): The order to sort the articles by. Must be one of 'newest', 'oldest', 'relevance'.
+            Defaults to 'relevance'.
 
         Returns:
         list[dict] | None: A list of 10 parsed articles if found, None otherwise.
@@ -78,10 +79,20 @@ class GuardianAPI:
         Raises:
         ValueError: If search_term is empty or None.
         ValueError: If from_date is provided but not in 'YYYY-MM-DD' format.
+        ValueError: If order_by is not in allowed values.
+        ValueError: If page_size exceed current API limit.
         GuardianAPIError: If an error occurs while fetching articles from the Guardian API.
         """
         if not search_term:
             raise ValueError("Search term parameter required.")
+
+        if order_by and order_by not in ["newest", "oldest", "relevance"]:
+            raise ValueError(
+                "The order_by must be one of 'newest', 'oldest', 'relevance'."
+            )
+
+        if page_size > 200:
+            raise ValueError("Page_size must not exceed 200.")  # current limit
 
         if from_date:
             try:
@@ -92,13 +103,16 @@ class GuardianAPI:
         req_params = {
             "q": search_term,
             "api-key": self.api_key,
-            "format": response_format,
-            "page": page,
+            "format": "json",
             "show-fields": "all",
+            "page-size": page_size,
         }
 
         if from_date:
             req_params["from-date"] = from_date
+
+        if order_by:
+            req_params["order-by"] = order_by
 
         try:
             response = requests.get(
@@ -131,11 +145,11 @@ class GuardianAPI:
 
         Parameters:
         articles (list[dict]): List of articles from the API response.
+        order_by (str | None): The order to sort the articles by.
+            ....
 
         Returns:
         list[GuardianContent]: list of GuardianContent models representing parsed search results.
         """
-        filtered_articles = []
-        for article in articles:
-            filtered_articles.append(GuardianArticlePreview(**article))
+        filtered_articles = [GuardianArticlePreview(**article) for article in articles]
         return filtered_articles
