@@ -1,11 +1,11 @@
 from datetime import datetime
+import os
 
 import requests
-from config import get_config
 from pydantic import AliasPath, BaseModel, Field, field_validator
 
 
-class GuardianContent(BaseModel):
+class GuardianArticlePreview(BaseModel):
     """Represents fields to retrieve from the Guardian API response."""
 
     web_publication_date: str = Field(..., alias="webPublicationDate")
@@ -22,7 +22,10 @@ class GuardianContent(BaseModel):
     def truncate_article_content(cls, content: str) -> str:
         """Truncate the article content to 1000 characters."""
         if len(content) > 1000:
-            return content[:1000]
+            preview = content[:1000].strip()
+            if preview[-1].isalpha():
+                return preview + "..."
+            return preview.rstrip(",") + ("..." if preview[-1] != "." else "")
         else:
             return content
 
@@ -43,13 +46,15 @@ class GuardianAPI:
 
     API_URL = "https://content.guardianapis.com"
 
-    def __init__(self, api_key: str):
-        if not api_key:
-            raise ValueError("API key is required.")
+    def __init__(self, api_key: str, request_timeout: int = 20):
+        self.api_key = api_key or os.getenv("GUARDIAN_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "API key is required. Please provide it or set the 'GUARDIAN_API_KEY' environment variable."
+            )
+        self.request_timeout = request_timeout
 
-        self.api_key = api_key
-
-    def get_articles(
+    def search_articles(
         self,
         search_term: str,
         from_date: str | None = None,
@@ -68,7 +73,7 @@ class GuardianAPI:
         page (int, optional): The page number of the search results to retrieve. Defaults to 1.
 
         Returns:
-        list[dict] | None: A list of parsed articles if found, None otherwise.
+        list[dict] | None: A list of 10 parsed articles if found, None otherwise.
 
         Raises:
         ValueError: If search_term is empty or None.
@@ -99,7 +104,7 @@ class GuardianAPI:
             response = requests.get(
                 f"{self.API_URL}/search",
                 params=req_params,
-                timeout=get_config().HTTP_REQ_TIMEOUT,
+                timeout=self.request_timeout,
             )
             response.raise_for_status()
         except requests.RequestException as e:
@@ -120,7 +125,7 @@ class GuardianAPI:
         else:
             return results
 
-    def _filter_articles(self, articles: list[dict]) -> list[GuardianContent]:
+    def _filter_articles(self, articles: list[dict]) -> list[GuardianArticlePreview]:
         """
         Parse the API response and extract required fields.
 
@@ -128,19 +133,9 @@ class GuardianAPI:
         articles (list[dict]): List of articles from the API response.
 
         Returns:
-        Alist[GuardianContent]: list of GuardianContent models representing parsed search results.
+        list[GuardianContent]: list of GuardianContent models representing parsed search results.
         """
         filtered_articles = []
         for article in articles:
-            filtered_articles.append(GuardianContent(**article))
+            filtered_articles.append(GuardianArticlePreview(**article))
         return filtered_articles
-
-
-if __name__ == "__main__":
-    import json
-
-    guardian_api = GuardianAPI(get_config().GUARDIAN_API_KEY)
-    articles = guardian_api.get_articles(
-        "machine learning", "2023-01-01", filter_response=False
-    )
-    print(json.dumps(articles))

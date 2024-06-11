@@ -3,9 +3,6 @@ import uuid
 from typing import Any
 
 import boto3
-from config import get_config
-
-config = get_config()
 
 
 class AWSKinesisStream:
@@ -14,22 +11,35 @@ class AWSKinesisStream:
 
     Attributes:
     stream_name (str): The name of the Kinesis stream.
+    region_name (str, optional): If not provided, the default region from the boto3 session will be used.
+
+    aws_access_key_id (str, optional): The AWS access key ID for authentication.
+    aws_secret_access_key (str, optional): The AWS secret access key for authentication.
+    If not provided, the default aws credential resolution chain will be used for both parameters.
     """
 
-    def __init__(self, stream_name: str):
+    def __init__(
+        self,
+        stream_name: str,
+        region_name: str | None = None,
+        aws_access_key_id: str | None = None,
+        aws_secret_access_key: str | None = None,
+    ):
         if not stream_name:
             raise ValueError("Stream_name parameter is required.")
 
         self.stream_name = stream_name
+        self.region_name = region_name or boto3.Session().region_name
 
-    def _get_client(self):
-        """Get AWS Kinesis client."""
-        return boto3.client(
-            "kinesis",
-            region_name=config.KINESIS_REGION_NAME,
-            aws_access_key_id=config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY,
-        )
+        if aws_access_key_id and aws_secret_access_key:
+            self.session = boto3.Session(
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+            )
+        else:
+            self.session = boto3.Session()
+
+        self.client = self.session.client("kinesis", region_name=self.region_name)
 
     def send_to_stream(self, data: Any, partition_key: str | None = None) -> dict:
         """
@@ -45,8 +55,7 @@ class AWSKinesisStream:
         if partition_key is None:
             partition_key = str(uuid.uuid4())
 
-        client = self._get_client()
-        response = client.put_record(
+        response = self.client.put_record(
             StreamName=self.stream_name,
             Data=json.dumps(data),
             PartitionKey=partition_key,
