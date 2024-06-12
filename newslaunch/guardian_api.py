@@ -48,7 +48,7 @@ class GuardianAPI:
 
     API_URL = "https://content.guardianapis.com"
 
-    def __init__(self, api_key: str, request_timeout: int = 20):
+    def __init__(self, api_key: str | None = None, request_timeout: int = 20):
         self.api_key = api_key or os.getenv("GUARDIAN_API_KEY")
         if not self.api_key:
             raise ValueError(
@@ -69,7 +69,7 @@ class GuardianAPI:
 
         Parameters:
         search_term (str): The search query for articles.
-        page_size (int, optional): The number of items displayed per page (up to 200). Defaults to 10.
+        page_size (int | None, optional): The number of items displayed per page (up to 200). Defaults to 10.
         from_date (str | None, optional): The earliest publication date (YYYY-MM-DD format). Defaults to None.
         filter_response (bool): Returns a filtered response if True, else returns the full response. Defaults to True.
         order_by (str | None, optional): The order to sort the articles by. Must be one of 'newest', 'oldest', 'relevance'.
@@ -93,12 +93,17 @@ class GuardianAPI:
                 "The order_by must be one of 'newest', 'oldest', 'relevance'."
             )
 
-        if page_size and page_size > 200:
-            raise ValueError("Page_size must not exceed 200.")  # current limit
+        if page_size and (
+            isinstance(page_size, int)
+            and page_size > 200
+            or not isinstance(page_size, int)
+        ):
+            raise ValueError("Page_size must be integer between 1-200.")
+            # current API limit
 
         if from_date:
             try:
-                datetime.strptime(from_date, "%Y-%m-%d")
+                datetime.strptime(from_date, "%Y-%m-%d")  # noqa: DTZ007
             except ValueError:
                 raise ValueError("The from_date must be in the format YYYY-MM-DD.")
 

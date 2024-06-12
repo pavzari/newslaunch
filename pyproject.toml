@@ -96,4 +96,5 @@ ignore = [
     "B904",     # raise-without-from-inside-except
     "SIM117",   # multiple-with-statements
     "ANN101",   # missing-type-self
+    "S101"      # use-of-assert-detected
 ]
