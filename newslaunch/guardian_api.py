@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from datetime import datetime
 
@@ -57,9 +59,9 @@ class GuardianAPI:
     def search_articles(
         self,
         search_term: str,
-        page_size: int = 10,
+        page_size: int | None = 10,
         from_date: str | None = None,
-        filter_response: bool = True,
+        filter_response: bool | None = True,
         order_by: str | None = None,
     ) -> list[dict] | None:
         """
@@ -78,9 +80,9 @@ class GuardianAPI:
 
         Raises:
         ValueError: If search_term is empty or None.
-        ValueError: If from_date is provided but not in 'YYYY-MM-DD' format.
-        ValueError: If order_by is not in allowed values.
-        ValueError: If page_size exceed current API limit.
+                    If from_date is provided but not in 'YYYY-MM-DD' format.
+                    If order_by is not in allowed values.
+                    If page_size exceed current API limit.
         GuardianAPIError: If an error occurs while fetching articles from the Guardian API.
         """
         if not search_term:
@@ -91,7 +93,7 @@ class GuardianAPI:
                 "The order_by must be one of 'newest', 'oldest', 'relevance'."
             )
 
-        if page_size > 200:
+        if page_size and page_size > 200:
             raise ValueError("Page_size must not exceed 200.")  # current limit
 
         if from_date:
@@ -146,7 +148,6 @@ class GuardianAPI:
         Parameters:
         articles (list[dict]): List of articles from the API response.
         order_by (str | None): The order to sort the articles by.
-            ....
 
         Returns:
         list[GuardianContent]: list of GuardianContent models representing parsed search results.

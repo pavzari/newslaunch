@@ -1,16 +1,16 @@
 [project]
-name = ""
-version = ""
-description = ""
+name = "newslaunch"
+version = "0.0.0"
+description ="A utility for retrieving and streaming news articles for analysis and processing."
 readme = "README.md"
 authors = [{name = "pavzari"}]
 license = {text = "Apache-2.0"}
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
     "License :: OSI Approved :: Apache Software License"
 ]
 dependencies = [
-     # "click",
+    "click",
     "requests",
     "pydantic",
     "boto3"
@@ -18,10 +18,19 @@ dependencies = [
 
 # [tool.setuptools.package-data]
 
-# [project.entry-points.console_scripts]
+[tool.setuptools.packages.find]
+include = ["newslaunch*"]
+
+[project.entry-points.console_scripts]
+newslaunch = "newslaunch.cli:cli"
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "ruff"]
+test = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "black"
+]
 
 [tool.ruff]
 exclude = [
