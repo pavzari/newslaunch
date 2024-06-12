@@ -1,3 +1,4 @@
+# ruff: noqa: B905
 import json
 import os
 from unittest.mock import MagicMock, patch
@@ -112,9 +113,7 @@ def test_search_articles_filtered_response_default(
 
         assert articles is not None
         assert len(articles) == len(filtered_sample_response)
-        for article, expected_article in zip(
-            articles, filtered_sample_response, strict=False
-        ):
+        for article, expected_article in zip(articles, filtered_sample_response):
             assert (
                 article["webPublicationDate"] == expected_article["webPublicationDate"]
             )
