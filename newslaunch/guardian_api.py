@@ -8,7 +8,7 @@ from pydantic import AliasPath, BaseModel, Field, field_validator
 
 
 class GuardianArticlePreview(BaseModel):
-    """Represents fields to retrieve from the Guardian API response."""
+    """Represents a subset of fields to retrieve from the Guardian API response."""
 
     web_publication_date: str = Field(..., alias="webPublicationDate")
     web_title: str = Field(..., alias="webTitle")
@@ -39,11 +39,11 @@ class GuardianAPIError(Exception):
 
 
 class GuardianAPI:
-    """
-    Wrapper class for interacting with Guardian API.
+    """Wrapper class for interacting with Guardian API.
 
-    Attributes:
-    api_key (str): API access key.
+    Args:
+        api_key (str, optional): API access key. Reads from env if not provided.
+        request_timeout (int, optional): HTTP request timeout. Defaults to 20s.
     """
 
     API_URL = "https://content.guardianapis.com"
@@ -64,29 +64,29 @@ class GuardianAPI:
         filter_response: bool | None = True,
         order_by: str | None = None,
     ) -> list[dict] | None:
-        """
-        Search for Guardian articles.
+        """Search for Guardian articles.
 
-        Parameters:
-        search_term (str): The search query for articles.
-        page_size (int | None, optional): The number of items displayed per page (up to 200). Defaults to 10.
-        from_date (str | None, optional): The earliest publication date (YYYY-MM-DD format). Defaults to None.
-        filter_response (bool): Returns a filtered response if True, else returns the full response. Defaults to True.
-        order_by (str | None, optional): The order to sort the articles by. Must be one of 'newest', 'oldest', 'relevance'.
-            Defaults to 'relevance'.
+        Args:
+            search_term (str): The search query for articles.
+            page_size (int, optional): The number of items displayed per page (up to 200). Defaults to 10.
+            from_date (str, optional): The earliest publication date (YYYY-MM-DD format). Defaults to None.
+            filter_response (bool, optional): Returns a filtered response if True, else returns the full response. Defaults to True.
+            order_by (str, optional): The order to sort the articles by. Must be one of 'newest', 'oldest', 'relevance'. Defaults to 'relevance'.
 
         Returns:
-        list[dict] | None: A list of 10 parsed articles if found, None otherwise.
+            (list[dict] | None): A list of articles if found, None otherwise.
 
         Raises:
-        ValueError: If search_term is empty or None.
-                    If from_date is provided but not in 'YYYY-MM-DD' format.
-                    If order_by is not in allowed values.
-                    If page_size exceed current API limit.
-        GuardianAPIError: If an error occurs while fetching articles from the Guardian API.
+            ValueError:
+                If search_term is empty or None.
+                If from_date is provided but not in 'YYYY-MM-DD' format.
+                If order_by is not in allowed values.
+                If page_size exceed current API limit.
+            GuardianAPIError:
+                If an error occurs while fetching articles from the Guardian API.
         """
         if not search_term:
-            raise ValueError("Search term parameter required.")
+            raise ValueError("Search term required.")
 
         if order_by and order_by not in ["newest", "oldest", "relevance"]:
             raise ValueError(
@@ -147,15 +147,13 @@ class GuardianAPI:
             return results
 
     def _filter_articles(self, articles: list[dict]) -> list[GuardianArticlePreview]:
-        """
-        Parse the API response and extract required fields.
+        """Parse the API response and extract a subset of fields.
 
-        Parameters:
-        articles (list[dict]): List of articles from the API response.
-        order_by (str | None): The order to sort the articles by.
+        Args:
+            articles (list[dict]): List of articles from the API response.
 
         Returns:
-        list[GuardianContent]: list of GuardianContent models representing parsed search results.
+            list[GuardianContent]: List of GuardianContent models representing parsed search results.
         """
         filtered_articles = [GuardianArticlePreview(**article) for article in articles]
         return filtered_articles

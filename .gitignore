@@ -198,3 +198,4 @@ notes.md
 notes.py
 *.zip
 /infra/producer_layer/python/
+newslaunch-config.json

@@ -8,16 +8,14 @@ import boto3
 
 
 class AWSKinesisStream:
-    """
-    Wrapper class for interacting with an AWS Kinesis stream.
+    """Wrapper class for interacting with an AWS Kinesis stream.
 
-    Attributes:
-    stream_name (str): The name of the Kinesis stream.
-    region_name (str, optional): If not provided, the default region from the boto3 session will be used.
-
-    aws_access_key_id (str, optional): The AWS access key ID for authentication.
-    aws_secret_access_key (str, optional): The AWS secret access key for authentication.
-    If not provided, the default aws credential resolution chain will be used for both parameters.
+    Args:
+        stream_name (str): The name of the Kinesis stream.
+        region_name (str, optional): If not provided, the default region from the boto3 session will be used.
+        aws_access_key_id (str, optional): The AWS access key ID for authentication.
+        aws_secret_access_key (str, optional): The AWS secret access key for authentication.
+        If not provided, the default aws credential resolution chain will be used for aws credentials.
     """
 
     def __init__(
@@ -44,15 +42,14 @@ class AWSKinesisStream:
         self.client = self.session.client("kinesis", region_name=self.region_name)
 
     def send_to_stream(self, data: Any, partition_key: str | None = None) -> dict:
-        """
-        Send data to Kinesis stream.
+        """Send data to Kinesis stream.
 
-        Parameters:
-        data: Data to send to the stream.
-        partition_key(str, optional): Partition key to use. Defaults to random UUID.
+        Args:
+            data: Data to send to the stream.
+            partition_key(str, optional): Partition key to use. Defaults to random UUID.
 
         Returns:
-        dict: The response from the Kinesis `put_record` API call.
+            (dict): The response from the Kinesis `put_record` API call.
         """
         if partition_key is None:
             partition_key = str(uuid.uuid4())
