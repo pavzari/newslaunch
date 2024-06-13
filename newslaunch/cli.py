@@ -41,11 +41,11 @@ def cli() -> None:
 
 @cli.command()
 @click.option("-g", "--guardian", required=True, help="Set Guardian API key.")
-def set_key(guardian):
+def set_key(guardian: str) -> None:
     """Set the API key for the specified news source."""
     if guardian:
         save_api_key("guardian", guardian)
-        click.secho("Guardian API key saved.", fg="green")
+        click.secho(f"Guardian API key saved in {CONFIG_FILE}", fg="green")
     else:
         click.echo("Please provide an API key for a supported news source.")
 
@@ -109,6 +109,6 @@ def guardian(
         else:
             click.secho("No articles found.", fg="red")
     except ValueError as e:
-        raise click.ClickException(f"Value Error: {e}")
+        raise click.ClickException(f"{e}")
     except GuardianAPIError as ge:
-        raise click.ClickException(f"Guardian API Error: {ge}")
+        raise click.ClickException(f"{ge}")
