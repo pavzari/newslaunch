@@ -14,6 +14,16 @@ def runner():
     return CliRunner()
 
 
+@pytest.fixture
+def mock_config():
+    with patch.object(Path, "exists") as mock_exists_config, patch(
+        "builtins.open",
+        mock_open(read_data=json.dumps({"guardian": "test_guardian_api_key"})),
+    ):
+        mock_exists_config.return_value = True
+        yield
+
+
 def test_version(runner):
     result = runner.invoke(cli, ["--version"])
     assert result.exit_code == 0
@@ -44,14 +54,14 @@ def test_set_key_guardian(runner):
         )
 
 
-def test_guardian_search_articles_no_results(runner):
+def test_guardian_search_articles_no_results(runner, mock_config):
     with patch.object(GuardianAPI, "search_articles", return_value=None):
         result = runner.invoke(cli, ["guardian", "test search"])
         assert result.exit_code == 0
         assert "No articles found." in result.output
 
 
-def test_guardian_search_invalid_date(runner):
+def test_guardian_search_invalid_date(runner, mock_config):
     result = runner.invoke(
         cli, ["guardian", "test search", "--from-date", "invalid-date"]
     )
@@ -59,7 +69,7 @@ def test_guardian_search_invalid_date(runner):
     assert "Error: The from_date must be in the format YYYY-MM-DD.\n" in result.output
 
 
-def test_guardian_search_articles_api_error(runner):
+def test_guardian_search_articles_api_error(runner, mock_config):
     with patch.object(
         GuardianAPI, "search_articles", side_effect=GuardianAPIError("API error")
     ):
@@ -68,7 +78,7 @@ def test_guardian_search_articles_api_error(runner):
         assert "Error: API error" in result.output
 
 
-def test_guardian_search_articles_success(runner):
+def test_guardian_search_articles_success(runner, mock_config):
     mock_response = [
         {
             "webPublicationDate": "2023-01-01T11:11:11Z",
