@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "streamlaunch-backend-bucket"
+    bucket = "newspad-backend"
     key    = "production/terraform.tfstate"
     region = "eu-west-2"
   }

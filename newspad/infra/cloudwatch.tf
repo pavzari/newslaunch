@@ -22,8 +22,12 @@ resource "aws_iam_policy" "cloudwatch_logs_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_cw_write_attachment" {
+resource "aws_iam_role_policy_attachment" "producer_lambda_cw_write_attachment" {
   role       = aws_iam_role.role_for_producer_lambda.name
   policy_arn = aws_iam_policy.cloudwatch_logs_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "consumer_lambda_cw_write_attachment" {
+  role       = aws_iam_role.role_for_consumer_lambda.name
+  policy_arn = aws_iam_policy.cloudwatch_logs_policy.arn
+}

@@ -1,11 +1,11 @@
 resource "aws_s3_bucket" "lambda_code_bucket" {
-  bucket_prefix = "streamlaunch-lambda-code-bucket-"
+  bucket_prefix = "newspad-lambda-code-"
 }
 
 data "archive_file" "producer_lambda_code_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../streamlaunch"
-  output_path = "${path.module}/../streamlaunch/producer_lambda.zip"
+  source_file = "${path.module}/../lambda/producer.py"
+  output_path = "${path.module}/../lambda/producer_lambda.zip"
 }
 
 resource "aws_s3_object" "producer_lambda_code_upload" {
@@ -15,21 +15,26 @@ resource "aws_s3_object" "producer_lambda_code_upload" {
   source_hash = filemd5(data.archive_file.producer_lambda_code_zip.output_path)
 }
 
-resource "null_resource" "install_layer_dep" {
+resource "null_resource" "install_layer_dependencies" {
   provisioner "local-exec" {
-    command = "pip install -r producer_layer/requirements.txt -t producer_layer/python/lib/python3.11/site-packages"
+    command = <<-EOT
+        cd ../..
+        pip install . -t newspad/lambda/producer_layer/python/lib/python3.11/site-packages
+   EOT
+    # pip install -–upgrade pip
   }
-  triggers = {
-    trigger = filemd5("producer_layer/requirements.txt")
-  }
+  # triggers = {
+  #   trigger = filemd5("${path.module}/../lambda/producer_req.txt"
+  #   )
+  # }
 }
 
 data "archive_file" "producer_layer_zip" {
   type        = "zip"
-  source_dir  = "producer_layer"
+  source_dir  = "${path.module}/../lambda/producer_layer"
   output_path = "producer_layer.zip"
   depends_on = [
-    null_resource.install_layer_dep
+    null_resource.install_layer_dependencies
   ]
 }
 
@@ -44,13 +49,13 @@ resource "aws_lambda_layer_version" "producer_lambda_layer" {
 }
 
 variable "guardian_api_key" {
-type      = string
-sensitive = true
+  type      = string
+  sensitive = true
 }
 
 resource "aws_lambda_function" "producer_lambda" {
-  function_name    = "producer_lambda"
-  handler          = "producer_lambda.lambda_handler"
+  function_name    = "producer"
+  handler          = "producer.lambda_handler"
   runtime          = "python3.11"
   timeout          = 100
   role             = aws_iam_role.role_for_producer_lambda.arn

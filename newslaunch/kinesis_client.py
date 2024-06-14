@@ -7,7 +7,7 @@ from typing import Any
 import boto3
 
 
-class AWSKinesisStream:
+class KinesisClient:
     """Wrapper class for interacting with an AWS Kinesis stream.
 
     Args:

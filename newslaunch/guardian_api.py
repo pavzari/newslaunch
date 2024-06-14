@@ -81,7 +81,7 @@ class GuardianAPI:
                 If search_term is empty or None.
                 If from_date is provided but not in 'YYYY-MM-DD' format.
                 If order_by is not in allowed values.
-                If page_size exceed current API limit.
+                If page_size exceeds current API limit.
             GuardianAPIError:
                 If an error occurs while fetching articles from the Guardian API.
         """

@@ -37,7 +37,7 @@ def load_api_key(source: str) -> str | None:
 @click.group()
 @click.version_option()
 def cli() -> None:
-    """newslauch CLI for fetching and processing news articles."""
+    """newslaunch CLI for fetching and processing news articles."""
     pass
 
 
