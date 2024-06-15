@@ -23,10 +23,10 @@ resource "null_resource" "install_layer_dependencies" {
    EOT
     # pip install -–upgrade pip
   }
-  # triggers = {
-  #   trigger = filemd5("${path.module}/../lambda/producer_req.txt"
-  #   )
-  # }
+   triggers = {
+     trigger = filemd5("${path.module}/../../newslaunch/kinesis_writer.py" # TEMP!
+     )
+   }
 }
 
 data "archive_file" "producer_layer_zip" {

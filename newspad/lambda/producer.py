@@ -3,7 +3,7 @@ import logging
 
 from botocore.exceptions import ClientError
 
-from newslaunch import GuardianAPI, GuardianAPIError, KinesisClient
+from newslaunch import GuardianAPI, GuardianAPIError, KinesisWriter
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -24,14 +24,21 @@ def lambda_handler(event: dict, context) -> dict:
             "order_by": body.get("order_by"),
         }
 
+        optional_params["filter_response"] = (
+            optional_params["filter_response"].lower() == "true"
+            if optional_params["filter_response"] is not None
+            else None
+        )
+
         optional_params = {k: v for k, v in optional_params.items() if v is not None}
 
         guardian_api = GuardianAPI()
-        kinesis = KinesisClient(stream_name)
+        kinesis = KinesisWriter(stream_name)
         search_results = guardian_api.search_articles(search_term, **optional_params)
 
         if search_results:
-            kinesis.send_to_stream(search_results)
+            batch = True if len(search_results) > 1 else False
+            kinesis.send_to_stream(search_results, record_per_entry=batch)
             log.info(f"Data published to {stream_name}")
             return {
                 "statusCode": 200,
@@ -51,10 +58,10 @@ def lambda_handler(event: dict, context) -> dict:
             "body": json.dumps({"error": "Invalid JSON in request body."}),
         }
     except ValueError as e:
-        log.error(f"Invalid input parameter: {e}")
+        log.error(f"Invalid input: {e}")
         return {
             "statusCode": 400,
-            "body": json.dumps({"error": f"Input parameter error: {e}"}),
+            "body": json.dumps({"error": f"Invalid input: {e}"}),
         }
     except (GuardianAPIError, ClientError) as e:
         log.error(f"Error processing request: {e}")

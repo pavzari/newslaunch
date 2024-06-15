@@ -64,6 +64,7 @@ resource "aws_iam_role_policy_attachment" "producer_lambda_kinesis_policy_attach
 }
 
 resource "aws_lambda_event_source_mapping" "kinesis_consumer_lambda_mapping" {
+    # batch_size = ...
   event_source_arn  = aws_kinesis_stream.guardian_stream.arn
   function_name     = aws_lambda_function.consumer_lambda.arn
   starting_position = "LATEST"
