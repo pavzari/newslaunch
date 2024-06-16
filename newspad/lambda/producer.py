@@ -37,7 +37,7 @@ def lambda_handler(event: dict, context) -> dict:
         search_results = guardian_api.search_articles(search_term, **optional_params)
 
         if search_results:
-            batch = True if len(search_results) > 1 else False
+            batch = len(search_results) > 1
             kinesis.send_to_stream(search_results, record_per_entry=batch)
             log.info(f"Data published to {stream_name}")
             return {

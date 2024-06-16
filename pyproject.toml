@@ -29,7 +29,8 @@ test = [
     "pytest",
     "pytest-cov",
     "ruff",
-    "black"
+    "black",
+    "moto",
 ]
 
 [tool.ruff]
