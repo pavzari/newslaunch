@@ -7,7 +7,7 @@ import click
 
 from newslaunch.guardian_api import GuardianAPI, GuardianAPIError
 
-CONFIG_FILE = Path(click.get_app_dir("newslaunch")) / "newslaunch-config.json"
+CONFIG_FILE = Path(click.get_app_dir("newslaunch")) / "newslaunch.json"
 
 
 def save_api_key(source: str, api_key: str) -> None:
@@ -62,7 +62,7 @@ def set_key(guardian: str) -> None:
     help="The earliest publication date (YYYY-MM-DD format).",
 )
 @click.option(
-    "-s",
+    "-ps",
     "--page-size",
     default=10,
     type=int,
@@ -81,7 +81,7 @@ def set_key(guardian: str) -> None:
     is_flag=True,
     default=True,
     type=bool,
-    help="Returns a full response if set, else returns only a subset of fields.",
+    help="Returns a full API response if set, else returns only a subset of fields (webPublicationDate, webTitle, webUrl, contentPreview).",
 )
 def guardian(
     search_term: str,
