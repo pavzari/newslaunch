@@ -50,33 +50,33 @@ def test_guardian_api_with_direct_key():
 
 def test_guardian_api_without_key_or_env_key(monkeypatch):
     monkeypatch.delenv("GUARDIAN_API_KEY", raising=False)
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         GuardianAPI()
 
 
 def test_search_articles_no_search_term(guardian_api):
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("")
 
 
 def test_search_articles_invalid_order_by(guardian_api):
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("test query", order_by="invalid_order")
 
 
 def test_search_articles_invalid_page_size(guardian_api):
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("test query", page_size=201)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("test query", page_size="not-int")
 
 
 def test_search_articles_invalid_from_date(guardian_api):
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("test query", from_date="not-a-date")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("test query", from_date="01-01-2012")
 
 
@@ -92,12 +92,18 @@ def test_search_articles_no_results_returns_none(guardian_api):
 
 
 @patch("requests.get")
-def test_search_articles_api_error(mocked_get, guardian_api):
+def test_search_articles_general_requests_error(mocked_get, guardian_api):
     mocked_get.side_effect = requests.RequestException("API error")
-
     with pytest.raises(GuardianAPIError):
         guardian_api.search_articles("error-search")
-    mocked_get.assert_called_once()
+
+
+@patch("requests.get")
+def test_search_articles_timeout_error(mocked_get, guardian_api):
+    mocked_get.side_effect = requests.Timeout("Timeout error")
+    with pytest.raises(GuardianAPIError) as err:
+        guardian_api.search_articles("timeout-test")
+    assert "Error fetching Guardian articles: Timeout error" in str(err.value)
 
 
 def test_search_articles_filtered_response_default(
@@ -108,7 +114,6 @@ def test_search_articles_filtered_response_default(
         mock_response.json.return_value = sample_response
         mock_response.status_code = 200
         mocked_get.return_value = mock_response
-
         articles = guardian_api.search_articles("test-query")
 
         assert articles is not None
@@ -129,7 +134,6 @@ def test_search_articles_full_response(guardian_api, sample_response):
         mock_response.json.return_value = sample_response
         mock_response.status_code = 200
         mocked_get.return_value = mock_response
-
         articles = guardian_api.search_articles("test query", filter_response=False)
 
         assert articles is not None

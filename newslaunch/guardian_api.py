@@ -33,9 +33,7 @@ class GuardianArticlePreview(BaseModel):
 
 
 class GuardianAPIError(Exception):
-    """Custom exception for Guardian API errors."""
-
-    pass
+    """Custom exception for Guardian API wrapper errors."""
 
 
 class GuardianAPI:
@@ -44,6 +42,10 @@ class GuardianAPI:
     Args:
         api_key (str, optional): API access key. Reads from env if not provided.
         request_timeout (int, optional): HTTP request timeout. Defaults to 20s.
+
+    Raises:
+        GuardianAPIError:
+            If GUARDIAN_API_KEY is not provided.
     """
 
     API_URL = "https://content.guardianapis.com"
@@ -51,8 +53,8 @@ class GuardianAPI:
     def __init__(self, api_key: str | None = None, request_timeout: int = 20):
         self.api_key = api_key or os.getenv("GUARDIAN_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "API key is required. Please provide it or set the 'GUARDIAN_API_KEY' environment variable."
+            raise GuardianAPIError(
+                "API key is required. Please provide it or set the 'GUARDIAN_API_KEY' env variable."
             )
         self.request_timeout = request_timeout
 
@@ -77,19 +79,18 @@ class GuardianAPI:
             (list[dict] | None): A list of articles if found, None otherwise.
 
         Raises:
-            ValueError:
+            GuardianAPIError:
                 If search_term is empty or None.
                 If from_date is provided but not in 'YYYY-MM-DD' format.
                 If order_by is not in allowed values.
                 If page_size exceeds current API limit.
-            GuardianAPIError:
                 If an error occurs while fetching articles from the Guardian API.
         """
         if not search_term:
-            raise ValueError("Search term required.")
+            raise GuardianAPIError("Search term required.")
 
         if order_by and order_by not in ["newest", "oldest", "relevance"]:
-            raise ValueError(
+            raise GuardianAPIError(
                 "The order_by must be one of 'newest', 'oldest', 'relevance'."
             )
 
@@ -98,14 +99,16 @@ class GuardianAPI:
             and page_size > 200
             or not isinstance(page_size, int)
         ):
-            raise ValueError("Page_size must be integer between 1-200.")
+            raise GuardianAPIError("Page_size must be integer between 1-200.")
             # current API limit
 
         if from_date:
             try:
                 datetime.strptime(from_date, "%Y-%m-%d")  # noqa: DTZ007
             except ValueError:
-                raise ValueError("The from_date must be in the format YYYY-MM-DD.")
+                raise GuardianAPIError(
+                    "The from_date must be in the format YYYY-MM-DD."
+                )
 
         req_params = {
             "q": search_term,
