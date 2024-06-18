@@ -46,11 +46,11 @@ newslaunch guardian "search_term"
 
 ## Documentation
 
-For more detailed documentation on each component and available options, please refer to the [docs directory](https://github.com/pavzari/docs/):
+For more detailed documentation on each component and available options, please refer to the [docs directory](docs/):
 
-- [Guardian API Wrapper](https://github.com/pavzari/docs/guardian_api.md)
-- [AWS Kinesis Writer](https://github.com/pavzari/docs/kinesis_writer.md)
-- [CLI documentation](https://github.com/pavzari/docs/cli.md).
+- [Guardian API Wrapper](docs/guardian_api.md)
+- [AWS Kinesis Writer](docs/kinesis_writer.md)
+- [CLI documentation](docs/cli.md).
 
 ## Development
 
