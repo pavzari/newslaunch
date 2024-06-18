@@ -19,8 +19,7 @@ pipx install newslaunch
 The example below shows how to use the GuardianAPI class to fetch articles from the Guardian and publish them to an AWS Kinesis stream using the KinesisWriter utility.
 
 ```python
-from newslaunch import GuardianAPI
-from newslaunch import KinesisWriter
+from newslaunch import GuardianAPI, KinesisWriter
 
 # Initialize GuardianAPI with API key from environment
 guardian_api = GuardianAPI()

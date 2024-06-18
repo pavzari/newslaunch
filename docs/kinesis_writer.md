@@ -11,7 +11,7 @@ To create an instance of `KinesisWriter`, you need to provide the stream name. O
 If AWS credentials are not provided, the KinesisWriter class will use the default boto3 AWS credential resolution chain, which works locally as well as on AWS Lambda.
 
 ```python
-from newslaunch.kinesis_writer import KinesisWriter
+from newslaunch import KinesisWriter
 
 kinesis_writer = KinesisWriter(
     stream_name="your_kinesis_stream_name",
@@ -65,7 +65,7 @@ The KinesisWriter class does not internally handle boto3 exceptions such as Clie
 ## Examples
 
 ```python
-from streamlaunch.kinesis_writer import KinesisWriter
+from newslaunch import KinesisWriter
 
 kinesis_writer = KinesisWriter(stream_name="my_stream")
 
@@ -75,7 +75,7 @@ print(response)
 ```
 
 ```python
-from streamlaunch.kinesis_writer import KinesisWriter
+from newslaunch import KinesisWriter
 
 kinesis_writer = KinesisWriter(stream_name="my_stream")
 
@@ -92,7 +92,7 @@ response = kinesis_writer.send_to_stream(data, record_per_entry=True, partition_
 ### Error Handling Examples
 
 ```python
-from streamlaunch.kinesis_writer import KinesisWriter
+from newslaunch import KinesisWriter
 from botocore.exceptions import ClientError
 import time
 

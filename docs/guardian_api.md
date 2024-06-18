@@ -26,7 +26,7 @@ GuardianAPI(api_key: str | None = None, request_timeout: int = 20)
 #### Example:
 
 ```python
-from newslaunch.guardian_api import GuardianAPI
+from newslaunch import GuardianAPI
 
 # Using API key from the environment
 api = GuardianAPI()
@@ -103,7 +103,7 @@ A custom exception class for handling errors related to the Guardian API.
 **Usage:**
 
 ```python
-from newslaunch.guardian_api import GuardianAPIError
+from newslaunch import GuardianAPIError
 
 try:
     articles = api.search_articles("search_query")
