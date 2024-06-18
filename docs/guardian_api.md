@@ -121,3 +121,18 @@ The `GuardianArticlePreview` is a Pydantic model that parses the full response f
 - `web_title` (str): The title of the article.
 - `web_url` (str): The URL of the article.
 - `content_preview` (str): A truncated preview of the article content (up to 1000 characters).
+
+```python
+articles = api.search_articles("search_query", from_date="2023-01-01")
+
+# By default, search_articles returns a list of dictionaries with the following key-value pairs:
+# articles = [
+#     {
+#         "webPublicationDate": "2023-01-01T00:00:00Z",
+#         "webTitle": "Example Article Title",
+#         "webUrl": "https://www.theguardian.com/example_article",
+#         "contentPreview": "Preview of the main article body up to 1000 characters..."
+#     },
+#     ...
+# ]
+```
