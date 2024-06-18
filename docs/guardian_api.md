@@ -111,16 +111,13 @@ except GuardianAPIError as e:
     print(f"An error occurred while fetching Guardian articles: {e}")
 ```
 
-## Response Model
-
 ### GuardianArticlePreview
 
-A Pydantic model representing a subset of fields retrieved from the Guardian API response. This is the default return when `filter_response` is set to True.
+The `GuardianArticlePreview` is a Pydantic model that parses the full response from the Guardian API. It represents a subset of fields retrieved by default (when `filter_response` is set to True).
 
 #### Fields:
 
 - `web_publication_date` (str): The publication date of the article.
 - `web_title` (str): The title of the article.
 - `web_url` (str): The URL of the article.
-- `content_preview` (str): A truncated preview of the article content (up to 1000
-  characters.)
+- `content_preview` (str): A truncated preview of the article content (up to 1000 characters).
