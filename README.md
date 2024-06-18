@@ -1,3 +1,6 @@
+[![PyPI](https://img.shields.io/pypi/v/newslaunch.svg)](https://pypi.org/project/newslaunch/)
+[![Tests](https://github.com/pavzari/newslaunch/workflows/Test/badge.svg)](https://github.com/pavzari/newslaunch/actions?query=workflow%3ATest)
+
 Newslaunch is a Python package that provides a simple wrapper for interacting with the Guardian API and a utility for writing data to an AWS Kinesis stream. It also includes a CLI for querying the Guardian API.
 
 ## Installation
