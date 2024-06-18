@@ -6,6 +6,10 @@ import uuid
 import boto3
 
 
+class KinesisWriterError(Exception):
+    """Custom exception class for KinesisWriter errors."""
+
+
 class KinesisWriter:
     """Helper class for writing data to an AWS Kinesis stream.
 
@@ -15,6 +19,9 @@ class KinesisWriter:
         aws_access_key_id (str, optional): The AWS access key ID for authentication.
         aws_secret_access_key (str, optional): The AWS secret access key for authentication.
         If not provided, the default aws credential resolution chain will be used.
+
+    Raises:
+        KinesisWriterError: If stream_name parameter is not provided.
     """
 
     def __init__(
@@ -25,7 +32,7 @@ class KinesisWriter:
         aws_secret_access_key: str | None = None,
     ):
         if not stream_name:
-            raise ValueError("Stream_name parameter is required.")
+            raise KinesisWriterError("Stream_name parameter is required.")
 
         self.stream_name = stream_name
         self.region_name = region_name or boto3.Session().region_name
@@ -52,14 +59,12 @@ class KinesisWriter:
             data: Data to send to the stream. Can be a single item or a list of items.
             partition_key (str, optional): Partition key to use. Defaults to random UUID.
             record_per_entry (bool, optional): Flag to determine whether to use put_record or put_records.
-                Defaults to False (use put_record).
+                Defaults to False (use put_record) whereby the contents of data are sent as a single record.
 
         Returns:
             (dict): The response from the Kinesis API call.
         """
         # TODO: retries if response['FailedRecordCount'] > 0?
-        # json serialization errors?
-        # good place for retries here?
         if record_per_entry:
             return self._send_batch_put_records(data, partition_key)
         else:
@@ -75,20 +80,22 @@ class KinesisWriter:
 
         Returns:
             (dict): The response from the Kinesis put_records API call.
+
+        Raises:
+            KinesisWriterError:
+                If data is not a list.
+                If the number of records or total size exceeds the limits.
         """
         if not isinstance(data, list):
-            raise ValueError(
+            raise KinesisWriterError(
                 "Data must be a list of values when using 'put_records' mode."
             )
 
         # TODO: split into chunks if > 500
         if len(data) > 500:
-            raise ValueError(
+            raise KinesisWriterError(
                 "The number of records exceeds the 500 record limit for put_records."
             )
-
-        if partition_key is None:
-            partition_key = str(uuid.uuid4())
 
         records = []
         for item in data:
@@ -98,15 +105,20 @@ class KinesisWriter:
                 record_data = item.encode("utf-8")
             else:
                 record_data = json.dumps(item).encode("utf-8")
-            records.append({"Data": record_data, "PartitionKey": partition_key})
 
-        if sum(len(record["Data"]) for record in records) > 5 * 1024 * 1024:
-            raise ValueError(
+            # If partition key is not provided, generate a random one for each
+            # record for equal shard distribution.
+            part_key = partition_key if partition_key is not None else str(uuid.uuid4())
+            records.append({"Data": record_data, "PartitionKey": part_key})
+
+        if (
+            sum(len(rec["Data"]) + len(rec["PartitionKey"]) for rec in records)
+            > 5 * 1024 * 1024
+        ):
+            raise KinesisWriterError(
                 "The total size of records exceeds the 5MiB limit for a single put_records."
             )
-
-        response = self.client.put_records(StreamName=self.stream_name, Records=records)
-        return response
+        return self.client.put_records(StreamName=self.stream_name, Records=records)
 
     def _send_single_put_record(self, data, partition_key: str | None) -> dict:
         """Send a single data record to the Kinesis stream using put_record.
@@ -117,6 +129,9 @@ class KinesisWriter:
 
         Returns:
             (dict): The response from the Kinesis put_record API call.
+
+        Raises:
+            KinesisWriterError: If the data size exceeds the limit.
         """
         if partition_key is None:
             partition_key = str(uuid.uuid4())
@@ -129,13 +144,12 @@ class KinesisWriter:
             data = json.dumps(data).encode("utf-8")
 
         if len(data) + len(partition_key.encode("utf-8")) > 1024 * 1024:
-            raise ValueError(
+            raise KinesisWriterError(
                 "The size of the data exceeds the 1MiB limit for a single put_record call."
             )
 
-        response = self.client.put_record(
+        return self.client.put_record(
             StreamName=self.stream_name,
             Data=data,
             PartitionKey=partition_key,
         )
-        return response
