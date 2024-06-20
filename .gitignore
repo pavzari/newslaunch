@@ -197,7 +197,7 @@ terraform.rc
 notes.md
 notes.py
 *.zip
-/lambda/producer_layer/python/
-/lambda/consumer_layer/python/
+newspad/lambda/producer_layer/
+newspad/lambda/consumer_layer/
 newslaunch-config.json
 .terraform.lock.hcl

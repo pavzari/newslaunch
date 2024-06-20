@@ -18,28 +18,27 @@ resource "aws_s3_object" "producer_lambda_code_upload" {
 resource "null_resource" "install_layer_dependencies" {
   provisioner "local-exec" {
     command = <<-EOT
-        cd ../..
-        pip install . -t newspad/lambda/producer_layer/python/lib/python3.11/site-packages
+        cd ../lambda
+        pip install --upgrade pip
+        pip install -r producer_requirements.txt -t producer_layer/python
    EOT
-    # pip install -–upgrade pip
   }
-   triggers = {
-     trigger = filemd5("${path.module}/../../newslaunch/kinesis_writer.py" # TEMP!
-     )
-   }
+  triggers = {
+    trigger = filemd5("${path.module}/../lambda/producer_requirements.txt")
+  }
 }
 
 data "archive_file" "producer_layer_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambda/producer_layer"
-  output_path = "producer_layer.zip"
+  output_path = "${path.module}/../lambda/producer_layer.zip"
   depends_on = [
     null_resource.install_layer_dependencies
   ]
 }
 
 resource "aws_lambda_layer_version" "producer_lambda_layer" {
-  filename            = "producer_layer.zip"
+  filename            = "${path.module}/../lambda/producer_layer.zip"
   source_code_hash    = data.archive_file.producer_layer_zip.output_base64sha256
   layer_name          = "producer_layer"
   compatible_runtimes = ["python3.11"]
